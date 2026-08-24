@@ -429,8 +429,10 @@ export function ReviewScreen({ route, navigation }: any) {
           </View>
         </Modal>
       </ScrollView>
-    );
+    </SafeAreaView>
+  );
 };
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,

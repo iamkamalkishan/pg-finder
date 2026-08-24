@@ -442,8 +442,11 @@ export function ListingDetailScreen() {
           </View>
         </View>
       </Modal>
-    );
+      </SafeAreaView>
+    </>
+  );
 }
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
