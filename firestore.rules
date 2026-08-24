@@ -1,0 +1,73 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Helper functions
+    function isSignedIn() { return request.auth != null; }
+    function getUserData() { return get(/databases/$(database)/documents/users/$(request.auth.uid)).data; }
+    function isGirl() { return isSignedIn() && getUserData().role == 'girl'; }
+    function isOwner() { return isSignedIn() && getUserData().role == 'owner'; }
+    function isAdmin() { return isSignedIn() && getUserData().role == 'admin'; }
+    function isOwnerOf(resource) { return isSignedIn() && resource.data.ownerId == request.auth.uid; }
+    
+    // USERS - Girls can read own, owners can read own, admins read all
+    match /users/{uid} {
+      allow read: if isSignedIn() && (uid == request.auth.uid || isAdmin());
+      allow create: if isSignedIn() && uid == request.auth.uid;
+      allow update: if isSignedIn() && (uid == request.auth.uid || isAdmin());
+      allow delete: if isAdmin();
+    }
+    
+    // PGs - Public read for active/verified, owners CRUD own, girls can bookmark
+    match /pgs/{pgId} {
+      allow read: if resource.data.status == 'active' && resource.data.verification.status == 'verified';
+      allow create: if isOwner() && request.resource.data.ownerId == request.auth.uid;
+      allow update: if isOwnerOf(resource) || isAdmin();
+      allow delete: if isOwnerOf(resource) || isAdmin();
+    }
+    
+    // ENQUIRIES - Girls create, owners read own PGs, both update own
+    match /enquiries/{enquiryId} {
+      allow read: if isSignedIn() && 
+        (resource.data.girlId == request.auth.uid || 
+         resource.data.ownerId == request.auth.uid || 
+         isAdmin());
+      allow create: if isGirl() && request.resource.data.girlId == request.auth.uid;
+      allow update: if isSignedIn() && 
+        (resource.data.girlId == request.auth.uid || 
+         resource.data.ownerId == request.auth.uid);
+    }
+    
+    // MESSAGES - Participants only
+    match /enquiries/{enquiryId}/messages/{messageId} {
+      allow read: if isSignedIn() && 
+        (get(/databases/$(database)/documents/enquiries/$(enquiryId)).data.girlId == request.auth.uid ||
+         get(/databases/$(database)/documents/enquiries/$(enquiryId)).data.ownerId == request.auth.uid);
+      allow create: if isSignedIn() && 
+        (get(/databases/$(database)/documents/enquiries/$(enquiryId)).data.girlId == request.auth.uid ||
+         get(/databases/$(database)/documents/enquiries/$(enquiryId)).data.ownerId == request.auth.uid);
+    }
+    
+    // REVIEWS - Girls create (verified stay), public read
+    match /reviews/{reviewId} {
+      allow read: if true;
+      allow create: if isGirl() && request.resource.data.girlId == request.auth.uid 
+        && request.resource.data.verifiedStay == true;
+      allow update: if isGirl() && resource.data.girlId == request.auth.uid;
+      allow delete: if isGirl() && resource.data.girlId == request.auth.uid || isAdmin();
+    }
+    
+    // SAFETY ALERTS - Girls create, admins read all
+    match /safetyAlerts/{alertId} {
+      allow read: if isAdmin() || (isSignedIn() && resource.data.girlId == request.auth.uid);
+      allow create: if isGirl() && request.resource.data.girlId == request.auth.uid;
+      allow update: if isAdmin();
+    }
+    
+    // COMMISSION TRANSACTIONS - Owners read own, admins all
+    match /commissionTransactions/{txnId} {
+      allow read: if isAdmin() || (isOwner() && resource.data.ownerId == request.auth.uid);
+      allow create: if isAdmin(); // created by cloud function
+      allow update: if isAdmin();
+    }
+  }
+}

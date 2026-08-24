@@ -1,0 +1,100 @@
+{
+  "expo": {
+    "name": "PG Finder for Girls",
+    "slug": "pg-finder",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./src/assets/icon.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./src/assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#E91E63"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.pgfinder.girls",
+      "buildNumber": "1",
+      "infoPlist": {
+        "NSCameraUsageDescription": "This app uses camera to upload PG photos and review photos",
+        "NSPhotoLibraryUsageDescription": "This app accesses photo library to upload PG photos and review photos",
+        "NSLocationWhenInUseUsageDescription": "This app uses location to find nearby PGs and for SOS emergency feature",
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "This app uses location for SOS emergency feature"
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./src/assets/adaptive-icon.png",
+        "backgroundColor": "#E91E63"
+      },
+      "package": "com.pgfinder.girls",
+      "versionCode": 1,
+      "permissions": [
+        "CAMERA",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE",
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION",
+        "INTERNET"
+      ]
+    },
+    "web": {
+      "favicon": "./src/assets/favicon.png",
+      "bundler": "metro",
+      "output": "single",
+      "name": "PG Finder for Girls",
+      "shortName": "PG Finder",
+      "description": "Safe, verified PGs for girls across India",
+      "themeColor": "#E91E63",
+      "backgroundColor": "#FAFAFA",
+      "display": "standalone",
+      "orientation": "portrait",
+      "scope": "/",
+      "startUrl": "/"
+    },
+    "plugins": [
+      "expo-build-properties",
+      "expo-font",
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Allow $(PRODUCT_NAME) to use your location for finding nearby PGs and SOS emergency alerts"
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow $(PRODUCT_NAME) to access your photos for uploading PG and review images",
+          "cameraPermission": "Allow $(PRODUCT_NAME) to access your camera for taking photos"
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "icon": "./src/assets/notification-icon.png",
+          "color": "#E91E63",
+          "sounds": ["./src/assets/notification.wav"]
+        }
+      ]
+    ],
+    "experiments": {
+      "tsconfigPaths": true,
+      "typedRoutes": false
+    },
+    "extra": {
+      "eas": {
+        "projectId": "your-eas-project-id"
+      }
+    },
+    "owner": "your-expo-username",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/your-eas-project-id"
+    }
+  }
+}
