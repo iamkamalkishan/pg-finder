@@ -9,7 +9,6 @@ import {
   Alert,
   ActivityIndicator,
   TextInput,
-  Picker,
   Modal,
 } from "react-native";
 import { useAuth } from "../../context/AuthContext";
@@ -37,6 +36,7 @@ import { createPG } from "../../services/firestore";
 import { uploadPGPhotos, uploadPGDocuments } from "../../services/storage";
 import * as ImagePicker from "expo-image-picker";
 import * as DocumentPicker from "expo-document-picker";
+import { Picker } from "@react-native-picker/picker";
 
 export function AddPGScreen({ navigation, route }: any) {
   const { user } = useAuth();

@@ -8,7 +8,7 @@ import { useAuth } from "../context/AuthContext";
 import { HomeScreen } from "../screens/home/HomeScreen";
 import { SearchScreen } from "../screens/search/SearchScreen";
 import { ListingDetailScreen } from "../screens/listing/ListingDetailScreen";
-import { ChatScreen } from "../screens/chat/ChatScreen";
+import { ChatDetailScreen } from "../screens/chat/ChatScreen";
 import { ProfileScreen } from "../screens/profile/ProfileScreen";
 import { OnboardingScreen } from "../screens/auth/OnboardingScreen";
 import { PhoneAuthScreen } from "../screens/auth/PhoneAuthScreen";
@@ -49,7 +49,7 @@ function GirlTabs() {
     >
       <Tab.Screen name="Home" component={HomeScreen} />
       <Tab.Screen name="Search" component={SearchScreen} />
-      <Tab.Screen name="Chats" component={ChatScreen} />
+      <Tab.Screen name="Chats" component={ChatDetailScreen} />
       <Tab.Screen name="Profile" component={ProfileScreen} />
     </Tab.Navigator>
   );
@@ -122,7 +122,7 @@ export function AppNavigator() {
               name="ListingDetail"
               component={ListingDetailScreen}
             />
-            <Stack.Screen name="ChatDetail" component={ChatScreen} />
+            <Stack.Screen name="ChatDetail" component={ChatDetailScreen} />
             <Stack.Screen name="SOS" component={SOSScreen} />
             <Stack.Screen name="SafetyScore" component={SafetyScoreScreen} />
             <Stack.Screen name="Review" component={ReviewScreen} />
@@ -135,7 +135,7 @@ export function AppNavigator() {
               name="ListingDetail"
               component={ListingDetailScreen}
             />
-            <Stack.Screen name="ChatDetail" component={ChatScreen} />
+            <Stack.Screen name="ChatDetail" component={ChatDetailScreen} />
           </>
         ) : (
           <>

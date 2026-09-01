@@ -15,10 +15,21 @@ import {
   OAuthProvider,
 } from 'firebase/auth';
 import { getAuthInstance } from '../firebase';
+import { isFirebaseConfigured } from '../firebase/config';
 import { User, UserRole } from '../../types';
 import { createUser, getUser, updateUser, getUserByPhone } from '../firestore';
+import { demoDb, makeDemoUid } from '../demoData';
 
 const auth = getAuthInstance();
+
+// ============ DEMO MODE (no Firebase keys) ============
+// A fake signed-in session so the whole app is explorable without keys.
+let demoUser: any = null;
+let demoListeners: Array<(u: any) => void> = [];
+
+export function isDemoMode(): boolean {
+  return !isFirebaseConfigured;
+}
 
 // ReCAPTCHA verifier for phone auth (web only)
 let recaptchaVerifier: RecaptchaVerifier | null = null;
@@ -42,6 +53,10 @@ export function initializeRecaptcha(containerId: string = 'recaptcha-container')
 }
 
 export async function sendPhoneOTP(phoneNumber: string, containerId?: string): Promise<ConfirmationResult> {
+  if (isDemoMode()) {
+    console.log('📱 [DEMO] OTP sent (any 6 digits will work):', formatPhoneNumber(phoneNumber));
+    return { confirm: async () => makeDemoFirebaseUser(formatPhoneNumber(phoneNumber)) } as any;
+  }
   // Format phone number for India
   const formattedPhone = formatPhoneNumber(phoneNumber);
   
@@ -103,14 +118,45 @@ export function formatPhoneNumber(phone: string): string {
 }
 
 export async function signOutUser(): Promise<void> {
+  if (isDemoMode()) {
+    demoUser = null;
+    demoListeners.forEach((cb) => cb(null));
+    return;
+  }
   await signOut(auth);
 }
 
 export function onAuthStateChange(callback: (user: FirebaseUser | null) => void): () => void {
+  if (isDemoMode()) {
+    demoListeners.push(callback);
+    // Notify asynchronously so React state updates safely after mount
+    setTimeout(() => callback(demoUser), 100);
+    return () => {
+      demoListeners = demoListeners.filter((cb) => cb !== callback);
+    };
+  }
   return onAuthStateChanged(auth, callback);
 }
 
+// ---- Demo-mode helpers ----
+export function makeDemoFirebaseUser(phone: string): any {
+  const uid = makeDemoUid(phone);
+  return {
+    uid,
+    phoneNumber: phone,
+    displayName: null,
+    email: null,
+    photoURL: null,
+  };
+}
+
+export function setDemoSignedIn(firebaseUser: any | null): void {
+  demoUser = firebaseUser;
+  demoListeners.forEach((cb) => cb(demoUser));
+}
+
 export async function getCurrentUser(): Promise<FirebaseUser | null> {
+  if (isDemoMode()) return demoUser;
   return auth.currentUser;
 }
 
@@ -124,6 +170,10 @@ export async function completeProfile(firebaseUser: FirebaseUser, profileData: {
   businessName?: string;
   gstNumber?: string;
 }): Promise<void> {
+  if (isDemoMode()) {
+    // In demo mode, completeProfile is handled by AuthContext via setDemoSignedIn
+    return;
+  }
   // Update Firebase Auth profile
   await updateProfile(firebaseUser, {
     displayName: profileData.name,
@@ -164,6 +214,9 @@ export async function completeProfile(firebaseUser: FirebaseUser, profileData: {
 }
 
 export async function getCurrentUserProfile(): Promise<User | null> {
+  if (isDemoMode()) {
+    return demoUser ? (demoDb.users.get(demoUser.uid) || null) : null;
+  }
   const firebaseUser = auth.currentUser;
   if (!firebaseUser) return null;
   
@@ -172,6 +225,15 @@ export async function getCurrentUserProfile(): Promise<User | null> {
 }
 
 export async function updateUserProfile(data: Partial<User>): Promise<void> {
+  if (isDemoMode()) {
+    if (!demoUser) throw new Error('Not authenticated');
+    const existing = demoDb.users.get(demoUser.uid);
+    if (existing) {
+      const updated = { ...existing, ...data, updatedAt: new Date() };
+      demoDb.users.set(demoUser.uid, updated as User);
+    }
+    return;
+  }
   const firebaseUser = auth.currentUser;
   if (!firebaseUser) throw new Error('Not authenticated');
   

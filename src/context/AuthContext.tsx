@@ -12,8 +12,12 @@ import {
   updateUserProfile,
   signOutUser,
   onAuthStateChange,
+  isDemoMode,
+  makeDemoFirebaseUser,
+  setDemoSignedIn,
 } from "../services/auth";
 import { initializeFirebase } from "../services/firebase";
+import { demoDb, makeDemoUid, delay } from "../services/demoData";
 
 // Initialize Firebase
 initializeFirebase();
@@ -37,6 +41,11 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | null>(null);
 
 let confirmationResult: any = null;
+let demoPendingPhone: string | null = null;
+
+function makeDemoUidPrefix(phone: string): string {
+  return phone.replace(/\D/g, "").slice(-10) || "9999999999";
+}
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
@@ -68,8 +77,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setError(null);
     setLoading(true);
     try {
+      if (isDemoMode()) {
+        await delay(600); // simulate network
+        demoPendingPhone = phone;
+        confirmationResult = {
+          confirm: async () => makeDemoFirebaseUser(makeDemoUidPrefix(phone)),
+        } as any;
+        console.log('📱 [DEMO MODE] OTP skip — koi bhi 6 digit daalo (e.g. 123456)');
+        return;
+      }
       // Import dynamically to avoid circular dependency
-      const { sendPhoneOTP } = await import("../../services/auth");
+      const { sendPhoneOTP } = await import("../services/auth");
       confirmationResult = await sendPhoneOTP(phone);
     } catch (err: any) {
       setError(err.message);
@@ -83,7 +101,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setError(null);
     setLoading(true);
     try {
-      const { verifyPhoneOTP } = await import("../../services/auth");
+      if (isDemoMode()) {
+        await delay(500);
+        if (!otp || otp.length !== 6) {
+          throw new Error("6-digit OTP daalo (demo me koi bhi chalega)");
+        }
+        const fbUser = makeDemoFirebaseUser(makeDemoUidPrefix(demoPendingPhone || "9999999999"));
+        setDemoSignedIn(fbUser);
+        // Pre-create an empty profile; Onboarding will complete it
+        if (!demoDb.users.has(fbUser.uid)) {
+          demoDb.users.set(fbUser.uid, {
+            uid: fbUser.uid,
+            role: "girl",
+            phone: fbUser.phoneNumber,
+            name: "",
+            verificationStatus: "verified",
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          } as User);
+        }
+        return;
+      }
+      const { verifyPhoneOTP } = await import("../services/auth");
       await verifyPhoneOTP(confirmationResult, otp);
       // User profile will be loaded via onAuthStateChange
     } catch (err: any) {
@@ -107,8 +146,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setError(null);
       setLoading(true);
       try {
+        if (isDemoMode()) {
+          await delay(400);
+          const { getCurrentUser } = await import("../services/auth");
+          const fbUser: any = await getCurrentUser();
+          if (!fbUser) throw new Error("Not authenticated");
+          const profile: User = {
+            uid: fbUser.uid,
+            role: data.role,
+            phone: fbUser.phoneNumber || "",
+            name: data.name || "",
+            email: data.email,
+            college: data.college,
+            workplace: data.workplace,
+            emergencyContact: data.emergencyContact,
+            businessName: data.businessName,
+            gstNumber: data.gstNumber,
+            verificationStatus: data.role === "owner" ? "verified" : "verified",
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          };
+          demoDb.users.set(fbUser.uid, profile);
+          setUser(profile);
+          return;
+        }
         const { completeProfile: completeProfileAuth } =
-          await import("../../services/auth");
+          await import("../services/auth");
         await completeProfileAuth(
           { uid: "", displayName: "", phoneNumber: "" } as any, // firebaseUser will be fetched inside
           data,

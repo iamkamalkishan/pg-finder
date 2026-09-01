@@ -73,7 +73,7 @@ function PGCard({ pg, onPress }: PGCardProps) {
       </View>
 
       <View style={styles.content}>
-        <View style={styles.header}>
+        <View style={styles.cardHeader}>
           <Text style={styles.title} numberOfLines={1}>
             {pg.title}
           </Text>
@@ -167,7 +167,7 @@ export function HomeScreen({ navigation }: any) {
 
   const loadPGs = async (reset = false) => {
     if (reset) {
-      setPGs([]);
+      setPgs([]);
       setLastDoc(null);
       setHasMore(true);
     }
@@ -190,7 +190,7 @@ export function HomeScreen({ navigation }: any) {
         20,
         reset ? undefined : lastDoc,
       );
-      setPGs((prev) => (reset ? result.pgs : [...prev, ...result.pgs]));
+      setPgs((prev) => (reset ? result.pgs : [...prev, ...result.pgs]));
       setLastDoc(result.lastDoc);
       setHasMore(!!result.lastDoc);
     } catch (error) {
@@ -550,7 +550,7 @@ const styles = StyleSheet.create({
   content: {
     padding: SPACING.md,
   },
-  header: {
+  cardHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "flex-start",

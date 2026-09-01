@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, SafeAreaView, TouchableOpacity, TextInput, Alert, ActivityIndicator, Picker } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, SafeAreaView, TouchableOpacity, TextInput, Alert, ActivityIndicator } from 'react-native';
+import { Picker } from '@react-native-picker/picker';
 import { useAuth } from '../../context/AuthContext';
 import { COLORS, SPACING, BORDER_RADIUS, FONT_SIZES, SHADOWS, INDIAN_STATES, MAJOR_CITIES, PROPERTY_TYPES, SHARING_OPTIONS, AMENITIES, SAFETY_FEATURES, AMENITY_LABELS, SAFETY_FEATURE_LABELS, PROPERTY_TYPE_LABELS } from '../../constants';
 import { PG, PropertyType } from '../../types';
